@@ -12,8 +12,8 @@ import (
 type Analyzer struct { Client Client; Store *store.Store }
 
 func AnalyzerOutput(raw string) (string,float64,[]store.AnalysisRequirement,error) {
-    raw=strings.TrimSpace(strings.TrimPrefix(strings.TrimPrefix(raw,"\`json"),"\`"))
-    raw=strings.TrimSuffix(raw,"\`")
+    raw=strings.TrimSpace(strings.TrimPrefix(raw,"\\x60\\x60\\x60json"))
+    raw=strings.TrimSuffix(raw,"\\x60\\x60\\x60")
     var out map[string]any
     if err:=json.Unmarshal([]byte(strings.TrimSpace(raw)),&out);err!=nil{return "",0,nil,fmt.Errorf("AI returned invalid JSON: %w",err)}
     summary,_:=out["summary"].(string)
