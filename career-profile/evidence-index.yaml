@@ -7,7 +7,7 @@ evidence:
     reference: CareerOS conversation history
     verification: user_asserted
     confidentiality: internal
-    note: Seed evidence is based on user-provided career information. Promote individual claims only after explicit verification.
+    note: User-provided career information. Used as authoritative input for current detailed Zscaler work until independently corroborated.
 
   - id: ev.resume.legacy
     type: resume
@@ -17,18 +17,25 @@ evidence:
 
   - id: ev.linkedin.profile
     type: linkedin
-    reference: professional LinkedIn profile
+    reference: https://www.linkedin.com/in/jeevanragula
     verification: needs_verification
     confidentiality: application_safe
 
   - id: ev.portfolio
     type: portfolio
-    reference: personal portfolio
-    verification: needs_verification
+    reference: https://jeevanragula.github.io/ and repository jeevanragula/jeevanragula.github.io
+    verification: reviewed
     confidentiality: application_safe
+    note: Public portfolio repository directly contains employment dates, titles, education, project history and skills.
 
   - id: ev.zscaler.public
     type: public_documentation
     reference: public Zscaler product documentation
     verification: needs_verification
     confidentiality: public
+
+  - id: ev.portfolio.resume
+    type: resume
+    reference: https://jeevanragula.github.io/files/jeevan_resume.pdf
+    verification: needs_verification
+    confidentiality: application_safe
