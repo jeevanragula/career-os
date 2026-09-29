@@ -1,0 +1,131 @@
+version: 1
+status: seed
+description: >
+  Seed claims for Career Brain. These are not automatically verified.
+  Promote claims only after evidence review.
+
+claims:
+  - id: positioning.principal_architect
+    text: "Principal Software Engineer / Architect"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: positioning.cloud_native
+    text: "Cloud-native distributed systems"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: positioning.kubernetes_cloud
+    text: "Kubernetes and public cloud"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: positioning.security
+    text: "Cloud security and data security"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: positioning.ai_security
+    text: "AI security and AI platforms"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.zpc_architecture
+    text: "Core engineer and overall product architect involved from early ZPC development"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.zpc_go_kubernetes
+    text: "Worked on Go microservices and Kubernetes/AWS EKS architecture for ZPC"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.dspm_architecture
+    text: "Core architect for distributed DSPM scanning workflows"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.dspm_workflow
+    text: "Worked on dynamic data snapshots, S3/file crawling, distributed scan orchestration, DLP integration, and result processing"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.clickhouse_migration
+    text: "Migrated analytics workloads from Snowflake toward ClickHouse using Altinity Operator"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.clickhouse_scale
+    text: "ClickHouse workload reached more than one billion rows"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.cost_reduction
+    text: "Reported approximately 60% cost reduction from the Snowflake-to-ClickHouse migration"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.neo4j_spark
+    text: "Reworked entitlement processing from Neo4j toward Spark-based processing and self-hosted Spark on Delta Lake/S3"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.inventory_postgres
+    text: "Moved frequently updated inventory workloads to PostgreSQL"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.documentdb_mongo
+    text: "Migrated AWS DocumentDB workloads to Percona MongoDB"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: zscaler.ai_security
+    text: "Worked on AI security / AI asset management architecture covering models, agents, MCP servers, workloads, and AI identities"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.go
+    text: "Go"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.aws
+    text: "AWS"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.azure
+    text: "Azure"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.gcp
+    text: "GCP"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.kubernetes
+    text: "Kubernetes"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.postgresql
+    text: "PostgreSQL"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.clickhouse
+    text: "ClickHouse"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.spark
+    text: "Apache Spark"
+    status: user_asserted
+    confidentiality: application_safe
+
+  - id: skills.kafka
+    text: "Apache Kafka"
+    status: user_asserted
+    confidentiality: application_safe
