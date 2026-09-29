@@ -1,7 +1,7 @@
 """Deterministic validation for CareerOS seed Career Brain files.
 
-This intentionally validates structure and safety rules only.
-It does not decide whether a professional claim is true.
+This validates structural and safety invariants only. It does not decide whether
+a professional claim is true.
 """
 
 from pathlib import Path
@@ -16,27 +16,46 @@ VALID_STATUS = {"needs_verification", "user_asserted", "verified", "rejected"}
 VALID_CONF = {"public", "application_safe", "internal", "confidential"}
 
 
-def values_after_key(text: str, key: str):
-    return re.findall(rf"^\s+{re.escape(key)}:\s*([^\n]+)$", text, re.MULTILINE)
+def claim_blocks(text: str):
+    return re.findall(
+        r"(?ms)^  - id: .*?(?=^  - id: |\Z)",
+        text,
+    )
 
 
 def main() -> int:
     errors = []
+    blocks = claim_blocks(claims_text)
 
-    statuses = [v.strip().strip('"') for v in values_after_key(claims_text, "status")]
-    confidences = [v.strip().strip('"') for v in values_after_key(claims_text, "confidentiality")]
+    if not blocks:
+        errors.append("no Career Brain claims found")
 
-    for value in statuses:
-        if value not in VALID_STATUS:
-            errors.append(f"invalid claim status: {value}")
+    for block in blocks:
+        status_match = re.search(r"^    status:\s*([^\n]+)$", block, re.MULTILINE)
+        confidentiality_match = re.search(
+            r"^    confidentiality:\s*([^\n]+)$", block, re.MULTILINE
+        )
 
-    for value in confidences:
-        if value not in VALID_CONF:
-            errors.append(f"invalid claim confidentiality: {value}")
+        status = status_match.group(1).strip().strip('"') if status_match else ""
+        confidentiality = (
+            confidentiality_match.group(1).strip().strip('"')
+            if confidentiality_match
+            else ""
+        )
 
-    # Seed profile must never silently contain a verified claim without an evidence mapping.
-    if "status: verified" in claims_text:
-        errors.append("seed claims must not contain verified claims before evidence review")
+        if status not in VALID_STATUS:
+            errors.append(f"invalid claim status: {status or '<missing>'}")
+
+        if confidentiality not in VALID_CONF:
+            errors.append(
+                f"invalid claim confidentiality: {confidentiality or '<missing>'}"
+            )
+
+        if status == "verified" and "evidence_refs:" not in block:
+            errors.append("verified claim is missing evidence_refs")
+
+        if status == "verified" and confidentiality == "confidential":
+            errors.append("confidential claim cannot be verified for application use")
 
     if "verification: verified" in evidence_text and "ev.user.seed" in evidence_text:
         errors.append("user seed evidence must not be marked verified")
@@ -46,7 +65,7 @@ def main() -> int:
             print(f"ERROR: {error}")
         return 1
 
-    print("Career Brain profile validation passed.")
+    print(f"Career Brain profile validation passed ({len(blocks)} claims).")
     return 0
 
 
