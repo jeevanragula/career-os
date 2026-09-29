@@ -1,0 +1,32 @@
+services:
+  postgres:
+    image: postgres:17
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: careeros
+      POSTGRES_USER: careeros
+      POSTGRES_PASSWORD: careeros_dev_password
+    volumes:
+      - careeros_pg:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL","pg_isready -U careeros -d careeros"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  careeros:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      CAREEROS_HTTP_ADDR: ":8080"
+      DATABASE_URL: "postgres://careeros:careeros_dev_password@postgres:5432/careeros?sslmode=disable"
+      AI_BASE_URL: "${AI_BASE_URL:-}"
+      AI_API_KEY: "${AI_API_KEY:-}"
+      AI_MODEL: "${AI_MODEL:-}"
+    ports:
+      - "8080:8080"
+volumes:
+  careeros_pg:
