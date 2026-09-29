@@ -29,15 +29,15 @@ AI may accelerate research, analysis, drafting, and workflow execution, but exte
 
 - M0 Foundation — complete
 - M1 Career Brain — complete
-- M2 Job Discovery — foundation + public adapters complete; persistence/worker hardening next
-- M3 Job Analysis — contract + persistence foundation
-- M4 Resume Engine — contract + persistence foundation
-- M5 Startup Radar — contract + persistence foundation
-- M6 Application Assistant — workflow foundation
-- M7 Outreach — workflow foundation
-- M8 Interview OS — workflow foundation
+- M2 Job Discovery — runnable public-provider discovery + persistence
+- M3 Job Analysis — runnable AI analysis path
+- M4 Resume Engine — runnable AI Markdown resume generation
+- M5 Startup Radar — persistence foundation
+- M6 Application Assistant — runnable preparation workflow
+- M7 Outreach — workflow foundation; sending intentionally gated
+- M8 Interview OS — workflow foundation; practice UI next
 
-See `docs/ROADMAP.md` for the next implementation wave.
+See `docs/ROADMAP.md` and `docs/DEPLOYMENT.md` for the implementation and run instructions.\n\n## Runnable MVP\n\nThe current MVP can discover public Lever/Ashby postings, persist jobs in PostgreSQL, run evidence-backed AI job analysis, generate a tailored Markdown resume, and create an application preparation record. External submission and outreach remain human-approved and are not automated.
 
 ## Repository structure
 
