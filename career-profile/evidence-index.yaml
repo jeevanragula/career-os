@@ -28,6 +28,20 @@ evidence:
     confidentiality: application_safe
     note: Public portfolio repository directly contains employment dates, titles, education, project history and skills.
 
+  - id: ev.patent.iac
+    type: patent
+    reference: US Patent 12598208 B2 — Infrastructure as Code (IaC) Scanner for Infrastructure Component Security
+    verification: reviewed
+    confidentiality: public
+    source: USPTO / public patent records
+
+  - id: ev.patent.dspm
+    type: patent
+    reference: US Patent Application 20250202926 A1 — Cloud-Based Data Security Posture Management (DSPM)
+    verification: reviewed
+    confidentiality: public
+    source: public patent records
+
   - id: ev.zscaler.public
     type: public_documentation
     reference: public Zscaler product documentation
