@@ -1,0 +1,32 @@
+version: 1
+
+verification_statuses:
+  - needs_verification
+  - user_asserted
+  - verified
+  - rejected
+
+confidentiality_levels:
+  - public
+  - application_safe
+  - internal
+  - confidential
+
+claim:
+  required:
+    - id
+    - text
+    - status
+    - confidentiality
+  rules:
+    - "verified claims require evidence references"
+    - "generated AI text cannot independently verify a claim"
+    - "confidential claims cannot enter application-safe artifacts"
+
+evidence:
+  required:
+    - id
+    - type
+    - reference
+    - verification
+    - confidentiality
