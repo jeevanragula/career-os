@@ -1,0 +1,34 @@
+version: 1
+status: seed
+
+evidence:
+  - id: ev.user.seed
+    type: user_statement
+    reference: CareerOS conversation history
+    verification: user_asserted
+    confidentiality: internal
+    note: Seed evidence is based on user-provided career information. Promote individual claims only after explicit verification.
+
+  - id: ev.resume.legacy
+    type: resume
+    reference: legacy resume PDF
+    verification: needs_verification
+    confidentiality: internal
+
+  - id: ev.linkedin.profile
+    type: linkedin
+    reference: professional LinkedIn profile
+    verification: needs_verification
+    confidentiality: application_safe
+
+  - id: ev.portfolio
+    type: portfolio
+    reference: personal portfolio
+    verification: needs_verification
+    confidentiality: application_safe
+
+  - id: ev.zscaler.public
+    type: public_documentation
+    reference: public Zscaler product documentation
+    verification: needs_verification
+    confidentiality: public
