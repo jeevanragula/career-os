@@ -3,22 +3,25 @@ package store
 import (
 	"context"
 	"database/sql"
-	"time"
+	"fmt"
 
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/jeevanragula/career-os/internal/jobs"
 )
 
 func (s *Store) UpsertJob(ctx context.Context, in jobs.NormalizeInput) (string, error) {
+	url := jobs.CanonicalizeURL(in.URL)
 	var id string
 	err := s.DB.QueryRowContext(ctx, `
 		INSERT INTO jobs(company,title,canonical_url,location,remote_mode,employment_type,first_seen_at,last_seen_at)
-		VALUES(NULLIF($1,''),NULLIF($2,''),NULLIF($3,''),NULLIF($4,''),NULLIF($5,''),NULLIF($6,''),$7,$7)
-		RETURNING id
-	`, in.Company,in.Title,jobs.CanonicalizeURL(in.URL),in.Location,in.RemoteMode,in.Employment,in.ObservedAt).Scan(&id)
-	if err == nil { return id,nil }
-	if !isUniqueViolation(err) { return "",err }
-	err = s.DB.QueryRowContext(ctx, `SELECT id FROM jobs WHERE canonical_url=$1 LIMIT 1`, jobs.CanonicalizeURL(in.URL)).Scan(&id)
-	return id,err
+		VALUES($1,$2,NULLIF($3,''),NULLIF($4,''),NULLIF($5,''),NULLIF($6,''),$7,$7)
+		ON CONFLICT (canonical_url) WHERE canonical_url IS NOT NULL
+		DO UPDATE SET last_seen_at=EXCLUDED.last_seen_at
+		RETURNING id`, in.Company,in.Title,url,in.Location,in.RemoteMode,in.Employment,in.ObservedAt).Scan(&id)
+	if err != nil { return "", fmt.Errorf("upsert job: %w",err) }
+	return id,nil
 }
 
 func (s *Store) InsertObservation(ctx context.Context, jobID string, o jobs.JobObservation) error {
@@ -36,11 +39,21 @@ func (s *Store) UpsertVersion(ctx context.Context, jobID string, in jobs.Normali
 	return err
 }
 
-func isUniqueViolation(err error) bool {
-	// The store treats any failed canonical insert as a lookup opportunity.
-	// A future repository layer can inspect pgconn.PgError.Code for 23505.
-	return err != nil
+func (s *Store) ListJobs(ctx context.Context, limit int) ([]jobs.Job, error) {
+	if limit <= 0 || limit > 200 { limit = 50 }
+	rows, err := s.DB.QueryContext(ctx, `SELECT id,company,title,COALESCE(canonical_url,''),COALESCE(location,''),COALESCE(remote_mode,''),COALESCE(employment_type,''),first_seen_at,last_seen_at,status FROM jobs ORDER BY last_seen_at DESC LIMIT $1`,limit)
+	if err != nil { return nil,err }
+	defer rows.Close()
+	var out []jobs.Job
+	for rows.Next() {
+		var j jobs.Job
+		if err:=rows.Scan(&j.ID,&j.Company,&j.Title,&j.CanonicalURL,&j.Location,&j.RemoteMode,&j.EmploymentType,&j.FirstSeenAt,&j.LastSeenAt,&j.Status);err!=nil{return nil,err}
+		out=append(out,j)
+	}
+	return out,rows.Err()
 }
 
 var _ = sql.ErrNoRows
-var _ = time.Time{}
+var _ = pgx.ErrNoRows
+var _ = pgconn.PgError{}
+var _ = stdlib.GetDefaultDriver
