@@ -1,0 +1,38 @@
+target_roles:
+  - name: Principal Software Engineer / Architect
+    priority: primary
+    focus:
+      - distributed systems
+      - cloud native platforms
+      - Kubernetes
+      - cloud security
+      - AI security
+      - data platforms
+    preferred_languages:
+      - Go
+      - Java
+    preferred_clouds:
+      - AWS
+      - Azure
+      - GCP
+    preferred_scope:
+      - architecture
+      - technical leadership
+      - core engineering
+      - platform scalability
+      - security engineering
+    geography:
+      - India
+      - Remote
+    employment: full_time
+
+  - name: Staff+ Cloud Security / AI Security Engineer
+    priority: secondary
+    focus:
+      - CNAPP
+      - CSPM
+      - DSPM
+      - AISPM
+      - cloud posture
+      - AI infrastructure security
+      - developer security
