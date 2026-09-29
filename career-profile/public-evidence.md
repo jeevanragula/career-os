@@ -22,6 +22,20 @@ The following items have external public evidence and can be promoted for review
 - US patent 12598208 B2, Infrastructure as Code (IaC) Scanner for Infrastructure Component Security, is publicly listed as granted April 7, 2026 and lists Jeevan Reddy Ragula as an inventor.
 - A public Cloud Native Hyderabad event listing identifies Jeevan Reddy Ragula as a Principal Software Engineer at Zscaler and as a speaker on KEDA.
 
+## Zscaler current-role boundary
+
+The public LinkedIn profile confirms Zscaler employment and the historical ZPC/DSPM project entries, but it does not expose enough detail about the user's latest Zscaler work to reconstruct the current role accurately.
+
+Therefore CareerOS should treat the user's future-provided Zscaler details as the authoritative source for:
+- current title and exact dates
+- latest AI security / AI asset management work
+- current architecture ownership
+- exact technologies and responsibilities
+- internal scale and customer/tenant metrics
+- measurable impact and cost figures
+
+Until supplied or independently evidenced, these remain unverified claims.
+
 ## Verification boundary
 
 Public corroboration does not prove every detailed implementation claim in the Career Brain.
