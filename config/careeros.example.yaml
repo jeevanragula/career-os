@@ -1,0 +1,18 @@
+http:
+  address: ":8080"
+
+database:
+  url: ""
+  # Keep credentials in environment/secret management, not this file.
+
+ai:
+  provider: ""
+  model: ""
+
+scheduling:
+  discovery_enabled: false
+  analysis_enabled: false
+  max_concurrency: 4
+
+approval:
+  external_actions_require_exact_payload_approval: true
