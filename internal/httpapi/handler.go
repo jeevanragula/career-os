@@ -22,6 +22,8 @@ func NewHandler(s *store.Store) http.Handler {
     mux.HandleFunc("GET /api/jobs",h.listJobs)
     mux.HandleFunc("POST /api/discover",h.discover)
     mux.HandleFunc("POST /api/analyze",h.analyze)
+    mux.HandleFunc("POST /api/resume",h.resume)
+    mux.HandleFunc("POST /api/applications",h.application)
     mux.HandleFunc("GET /",h.index)
     return mux
 }
@@ -43,3 +45,25 @@ type analyzeRequest struct { JobID string `json:"job_id"` }
 func (h *Handler) analyze(w http.ResponseWriter,r *http.Request){var in analyzeRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};if h.AI.BaseURL==""||h.AI.Model==""{writeJSON(w,503,map[string]string{"error":"AI_BASE_URL and AI_MODEL are required"});return};err:=(&ai.Analyzer{Client:h.AI,Store:h.Store}).Analyze(context.Background(),in.JobID);if err!=nil{writeJSON(w,502,map[string]string{"error":err.Error()});return};writeJSON(w,200,map[string]string{"status":"analyzed"})}
 func (h *Handler) index(w http.ResponseWriter,r *http.Request){http.ServeFile(w,r,"web/index.html")}
 func writeJSON(w http.ResponseWriter,status int,v any){w.Header().Set("Content-Type","application/json");w.WriteHeader(status);_ = json.NewEncoder(w).Encode(v)}
+
+type resumeRequest struct { JobID string `json:"job_id"` }
+func (h *Handler) resume(w http.ResponseWriter,r *http.Request){
+    var in resumeRequest
+    if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return}
+    if h.Store==nil||h.AI.BaseURL==""||h.AI.Model==""{writeJSON(w,503,map[string]string{"error":"database and AI configuration are required"});return}
+    content,err:=(&ai.Analyzer{Client:h.AI,Store:h.Store}).GenerateResume(r.Context(),in.JobID)
+    if err!=nil{writeJSON(w,502,map[string]string{"error":err.Error()});return}
+    id,err:=h.Store.SaveResume(r.Context(),in.JobID,"Tailored Resume","Targeted resume","job-tailored",content,h.AI.Model)
+    if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return}
+    writeJSON(w,200,map[string]any{"variant_id":id,"content":content})
+}
+
+type applicationRequest struct { JobID string `json:"job_id"`; ResumeVariantID string `json:"resume_variant_id"` }
+func (h *Handler) application(w http.ResponseWriter,r *http.Request){
+    var in applicationRequest
+    if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return}
+    if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return}
+    id,err:=h.Store.CreateApplication(r.Context(),in.JobID,in.ResumeVariantID)
+    if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return}
+    writeJSON(w,200,map[string]any{"application_id":id,"status":"preparing","message":"Application package created. Submission still requires explicit human approval."})
+}
