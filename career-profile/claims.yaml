@@ -1,131 +1,168 @@
 version: 1
 status: seed
 description: >
-  Seed claims for Career Brain. These are not automatically verified.
-  Promote claims only after evidence review.
+  Career Brain claims. Historical profile claims are corroborated by the user's
+  public portfolio source; detailed current Zscaler claims remain user asserted.
 
 claims:
   - id: positioning.principal_architect
     text: "Principal Software Engineer / Architect"
-    status: user_asserted
+    status: verified
     confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
 
-  - id: positioning.cloud_native
-    text: "Cloud-native distributed systems"
-    status: user_asserted
+  - id: experience.zscaler_principal
+    text: "Principal Software Engineer at Zscaler India Pvt Ltd from Apr 2022 to Present"
+    status: verified
     confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
 
-  - id: positioning.kubernetes_cloud
-    text: "Kubernetes and public cloud"
-    status: user_asserted
+  - id: experience.zscaler_senior_staff
+    text: "Senior Staff Software Engineer at Zscaler India Pvt Ltd from Aug 2021 to Mar 2022"
+    status: verified
     confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
 
-  - id: positioning.security
-    text: "Cloud security and data security"
-    status: user_asserted
+  - id: experience.mcafee
+    text: "Senior Staff Engineer at McAfee India Pvt Ltd from Aug 2019 to Aug 2021"
+    status: verified
     confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
 
-  - id: positioning.ai_security
-    text: "AI security and AI platforms"
-    status: user_asserted
+  - id: experience.ivy
+    text: "Lead - Software Development at IVY Software Development Services Pvt Ltd from Jul 2010 to Jul 2019"
+    status: verified
     confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: experience.hp
+    text: "Software Engineer at HP from Nov 2009 to Jul 2010"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: experience.ibm
+    text: "Application Developer at IBM from Aug 2007 to Oct 2009"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: education.btech
+    text: "B.Tech in Electronics and Communication Engineering from Jawaharlal Nehru Technological University, Hyderabad, 2003-2007"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: project.zpc
+    text: "Zscaler Posture Control — Architect, Lead and Developer; Aug 2021 - Present"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: project.skyhigh_casb
+    text: "Skyhigh Cloud Access Security Broker — Lead and Developer; Aug 2019 - Aug 2021"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: project.payment_gateway
+    text: "PCI DSS Certified Payment Gateway Platform for Entain — Lead and Developer; Jul 2010 - Jul 2019"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: project.serviceguard
+    text: "HPE Serviceguard for Linux — Developer; Nov 2009 - Jul 2010"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: project.keda
+    text: "KEDA Kubernetes Event-driven Autoscaler — Contributor; Aug 2023 - Present"
+    status: verified
+    confidentiality: public
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.go
+    text: "Golang"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.java
+    text: "Java"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.kubernetes
+    text: "Kubernetes"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.aws
+    text: "AWS"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.cloud_security
+    text: "Cloud Security"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.docker
+    text: "Docker"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.kafka
+    text: "Kafka"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.linux
+    text: "Linux"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
+
+  - id: skills.git
+    text: "Git, GitHub, GitLab and Azure DevOps"
+    status: verified
+    confidentiality: application_safe
+    evidence_refs: [ev.portfolio]
 
   - id: zscaler.zpc_architecture
     text: "Core engineer and overall product architect involved from early ZPC development"
     status: user_asserted
     confidentiality: application_safe
-
-  - id: zscaler.zpc_go_kubernetes
-    text: "Worked on Go microservices and Kubernetes/AWS EKS architecture for ZPC"
-    status: user_asserted
-    confidentiality: application_safe
+    evidence_refs: [ev.user.seed]
 
   - id: zscaler.dspm_architecture
     text: "Core architect for distributed DSPM scanning workflows"
     status: user_asserted
     confidentiality: application_safe
-
-  - id: zscaler.dspm_workflow
-    text: "Worked on dynamic data snapshots, S3/file crawling, distributed scan orchestration, DLP integration, and result processing"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: zscaler.clickhouse_migration
-    text: "Migrated analytics workloads from Snowflake toward ClickHouse using Altinity Operator"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: zscaler.clickhouse_scale
-    text: "ClickHouse workload reached more than one billion rows"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: zscaler.cost_reduction
-    text: "Reported approximately 60% cost reduction from the Snowflake-to-ClickHouse migration"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: zscaler.neo4j_spark
-    text: "Reworked entitlement processing from Neo4j toward Spark-based processing and self-hosted Spark on Delta Lake/S3"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: zscaler.inventory_postgres
-    text: "Moved frequently updated inventory workloads to PostgreSQL"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: zscaler.documentdb_mongo
-    text: "Migrated AWS DocumentDB workloads to Percona MongoDB"
-    status: user_asserted
-    confidentiality: application_safe
+    evidence_refs: [ev.user.seed]
 
   - id: zscaler.ai_security
     text: "Worked on AI security / AI asset management architecture covering models, agents, MCP servers, workloads, and AI identities"
     status: user_asserted
     confidentiality: application_safe
+    evidence_refs: [ev.user.seed]
 
-  - id: skills.go
-    text: "Go"
+  - id: zscaler.clickhouse_scale
+    text: "ClickHouse workload reached more than one billion rows"
     status: user_asserted
     confidentiality: application_safe
+    evidence_refs: [ev.user.seed]
 
-  - id: skills.aws
-    text: "AWS"
+  - id: zscaler.cost_reduction
+    text: "Reported approximately 60% cost reduction from the Snowflake-to-ClickHouse migration"
     status: user_asserted
     confidentiality: application_safe
-
-  - id: skills.azure
-    text: "Azure"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: skills.gcp
-    text: "GCP"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: skills.kubernetes
-    text: "Kubernetes"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: skills.postgresql
-    text: "PostgreSQL"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: skills.clickhouse
-    text: "ClickHouse"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: skills.spark
-    text: "Apache Spark"
-    status: user_asserted
-    confidentiality: application_safe
-
-  - id: skills.kafka
-    text: "Apache Kafka"
-    status: user_asserted
-    confidentiality: application_safe
+    evidence_refs: [ev.user.seed]
