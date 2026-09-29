@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"net/url"
 	"regexp"
-	"sort"
 	"strings"
 )
 
@@ -72,7 +71,6 @@ func ContentHash(in NormalizeInput) string {
 		NormalizeText(in.Employment),
 		NormalizeText(in.Description),
 	}
-	sort.Strings(parts)
 	h := sha256.Sum256([]byte(strings.Join(parts, "\n")))
 	return hex.EncodeToString(h[:])
 }
