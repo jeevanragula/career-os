@@ -1,0 +1,54 @@
+searches:
+  - name: principal-cloud-security
+    enabled: true
+    keywords:
+      - principal software engineer
+      - principal engineer
+      - staff software engineer
+      - software architect
+      - cloud security
+      - platform security
+      - AI security
+    locations:
+      - India
+      - Remote
+    remote_modes:
+      - remote
+      - hybrid
+
+  - name: staff-platform
+    enabled: true
+    keywords:
+      - staff engineer
+      - principal engineer
+      - distributed systems
+      - platform engineering
+      - Kubernetes
+      - cloud native
+    locations:
+      - India
+      - Remote
+    remote_modes:
+      - remote
+      - hybrid
+
+companies:
+  include:
+    - Zscaler
+    - Cloudflare
+    - Palo Alto Networks
+    - Wiz
+    - Datadog
+    - Snowflake
+    - Databricks
+    - Confluent
+    - MongoDB
+    - HashiCorp
+    - Elastic
+    - CrowdStrike
+    - Microsoft
+    - Google
+    - Amazon
+    - Anthropic
+    - OpenAI
+  mode: preferred_not_exclusive
