@@ -137,6 +137,18 @@ claims:
     confidentiality: application_safe
     evidence_refs: [ev.portfolio]
 
+  - id: patent.iac_scanner
+    text: "Co-inventor on US Patent 12598208 B2, Infrastructure as Code (IaC) Scanner for Infrastructure Component Security, granted April 7, 2026"
+    status: verified
+    confidentiality: public
+    evidence_refs: [ev.patent.iac]
+
+  - id: patent.dspm
+    text: "Co-inventor on US Patent Application 20250202926 A1, Cloud-Based Data Security Posture Management (DSPM), published June 19, 2025"
+    status: verified
+    confidentiality: public
+    evidence_refs: [ev.patent.dspm]
+
   - id: zscaler.zpc_architecture
     text: "Core engineer and overall product architect involved from early ZPC development"
     status: user_asserted
