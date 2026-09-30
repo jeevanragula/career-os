@@ -1,58 +1,62 @@
 # CareerOS Deployment Runbook
 
-## 1. Local first run
+## Local
 
-Requirements: Docker Engine, Docker Compose, Git.
+```bash
+cp .env.example .env
+# set CAREEROS_AUTH_USER and CAREEROS_AUTH_PASSWORD
+docker compose up --build
+```
 
-From the repository root:
+Open **http://localhost:8080**. Basic Auth protects the dashboard when credentials are configured.
 
-    cp .env.example .env
-    docker compose up --build
+If the local database volume predates migration 014:
 
-Open http://localhost:8080.
+```bash
+make reset
+```
 
-Health: http://localhost:8080/healthz
+This deletes only the local Docker database volume. Never run it against production data.
 
-PostgreSQL migrations run automatically when the database volume is initialized. If a development database must be recreated, use `docker compose down -v` followed by `docker compose up --build`. Never use `down -v` for production.
+## Production
 
-## 2. Configure AI
+CareerOS is packaged as one container containing the Go API and dashboard. Put it behind HTTPS and connect it to managed PostgreSQL.
 
-CareerOS accepts an OpenAI-compatible `/chat/completions` endpoint.
+Required environment:
 
-Set these in `.env`:
+```env
+DATABASE_URL=postgres://...
+CAREEROS_AUTH_USER=...
+CAREEROS_AUTH_PASSWORD=...
+AI_BASE_URL=https://provider.example/v1
+AI_API_KEY=...
+AI_MODEL=...
+```
 
-    AI_BASE_URL=
-    AI_API_KEY=
-    AI_MODEL=
+For the first deployment, a Docker-capable VM/container platform is sufficient. Keep the database on a private network and store secrets in the platform's secret manager.
 
-The same interface can point to a hosted provider or a local model server. The AI layer currently performs job analysis only.
+### Startup
 
-## 3. Discover jobs
+The container serves:
 
-The dashboard accepts a provider, provider/company identifier, public API URL, and optional keywords.
+- `/` — Career Command Center
+- `/api/dashboard` — workspace snapshot
+- `/api/agents` — agent registry
+- `/api/agents/run` — run one agent
+- `/api/discover` — public job discovery
+- `/api/analyze` — evidence-backed job analysis
+- `/api/resume` — tailored resume generation
+- `/api/applications` — application preparation
+- `/healthz` — liveness
+- `/readyz` — database readiness
 
-For Lever, use the public postings API base and the company site name. For Ashby, use the company's public job-board API endpoint.
+## Security
 
-CareerOS stores the source observation, canonical job, and job version.
+- Basic Auth is optional but should be enabled for any public deployment until a stronger identity layer is added.
+- Never expose `DATABASE_URL` or `AI_API_KEY` to the browser.
+- External application submission and outreach remain human-approved.
+- Keep public portfolio data separate from private CareerOS data.
 
-## 4. Production architecture
+## Backups
 
-    Internet -> HTTPS reverse proxy -> CareerOS container -> Managed PostgreSQL
-
-For the first production deployment, use a Docker-capable host with managed PostgreSQL. Kubernetes is optional and should be introduced only when you need its operational features.
-
-## 5. Production requirements
-
-1. Replace the development PostgreSQL password.
-2. Put DATABASE_URL and AI credentials in secret management.
-3. Use HTTPS.
-4. Add authentication before exposing the dashboard publicly.
-5. Keep PostgreSQL private.
-6. Back up PostgreSQL.
-7. Set resource limits and log retention.
-8. Never expose provider credentials to browser JavaScript.
-9. Keep application submission/outreach disabled until an authorized integration is connected to the exact-payload approval workflow.
-
-## 6. Important MVP boundary
-
-The repository now runs the discovery and AI-analysis path. It is not yet a production application-submission bot. That boundary is intentional: external actions require authorized integrations and human approval.
+Back up PostgreSQL and test restore procedures before treating CareerOS as the system of record.
