@@ -16,7 +16,9 @@ import (
 
 type Handler struct { Store *store.Store; AI ai.Client; Career *career.HTTP; AuthUser string; AuthPassword string }
 
-func NewHandler(s *store.Store) http.Handler {
+func NewHandler(stores ...*store.Store) http.Handler {
+ var s *store.Store
+ if len(stores)>0 { s=stores[0] }
  aiClient:=ai.Client{BaseURL:os.Getenv("AI_BASE_URL"),APIKey:os.Getenv("AI_API_KEY"),Model:os.Getenv("AI_MODEL")}
  h:=&Handler{Store:s,AI:aiClient,AuthUser:os.Getenv("CAREEROS_AUTH_USER"),AuthPassword:os.Getenv("CAREEROS_AUTH_PASSWORD")}
  if s!=nil { h.Career=&career.HTTP{Store:&career.Store{DB:s.DB},AI:aiClient} }
