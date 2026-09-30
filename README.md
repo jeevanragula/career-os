@@ -149,3 +149,27 @@ Do not store credentials, session cookies, API tokens, passwords, employer/custo
 Generated career artifacts must trace back to canonical evidence.
 
 External actions remain human-approved.
+
+## Autonomous opportunity discovery
+
+You do not maintain a company or job-source list.
+
+CareerOS discovers opportunity signals from multiple public ecosystems, including major job portals, startup ecosystems, Gartner Peer Insights/vendor ecosystems, CNCF/cloud-native communities, public conference sponsorships, cloud events, security conferences/competitions, and engineering communities.
+
+The discovery flow is:
+
+1. Start with the user's target-role and technology profile.
+2. Search across multiple independent signal classes.
+3. Deduplicate discovered companies/domains.
+4. Preserve the evidence that caused each company to be discovered.
+5. Resolve and verify the company's own career page.
+6. Extract public roles and feed verified roles into the existing job-analysis pipeline.
+7. Analyze opportunities against the user's verified career evidence.
+
+A discovery signal is **not** an employer rating. It is only a reason to investigate a company or role.
+
+The current web-search implementation uses Brave Search API. Configure only:
+
+BRAVE_SEARCH_API_KEY=...
+
+You do not need to configure individual job portals or companies.
