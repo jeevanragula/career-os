@@ -13,11 +13,11 @@ import (
     "github.com/jeevanragula/career-os/internal/store"
 )
 
-type Handler struct { Store *store.Store; AI ai.Client; Career *career.HTTP }
+type Handler struct { Store *store.Store; AI ai.Client; Career *career.HTTP; AuthUser string; AuthPassword string }
 
 func NewHandler(s *store.Store) http.Handler {
     aiClient:=ai.Client{BaseURL:os.Getenv("AI_BASE_URL"),APIKey:os.Getenv("AI_API_KEY"),Model:os.Getenv("AI_MODEL")}
-    h:=&Handler{Store:s,AI:aiClient}
+    h:=&Handler{Store:s,AI:aiClient,AuthUser:os.Getenv("CAREEROS_AUTH_USER"),AuthPassword:os.Getenv("CAREEROS_AUTH_PASSWORD")}
     if s!=nil { h.Career=&career.HTTP{Store:&career.Store{DB:s.DB},AI:aiClient} }
     mux:=http.NewServeMux()
     mux.HandleFunc("GET /healthz",health)
@@ -35,9 +35,9 @@ func NewHandler(s *store.Store) http.Handler {
     mux.HandleFunc("GET /dashboard.css",func(w http.ResponseWriter,r *http.Request){http.ServeFile(w,r,"web/dashboard.css")})
     mux.HandleFunc("GET /dashboard.js",func(w http.ResponseWriter,r *http.Request){http.ServeFile(w,r,"web/dashboard.js")})
     mux.HandleFunc("GET /",h.index)
-    return mux
+    return withBasicAuth(mux,h.AuthUser,h.AuthPassword)
 }
-func health(w http.ResponseWriter,r *http.Request){writeJSON(w,200,map[string]string{"status":"ok"})}
+func withBasicAuth(next http.Handler,user,password string) http.Handler {\n    if user=="" || password=="" { return next }\n    return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){\n        u,p,ok:=r.BasicAuth(); if !ok || u!=user || p!=password { w.Header().Set("WWW-Authenticate", `Basic realm="CareerOS"`); w.WriteHeader(http.StatusUnauthorized); return }; next.ServeHTTP(w,r)\n    })\n}\n\nfunc health(w http.ResponseWriter,r *http.Request){writeJSON(w,200,map[string]string{"status":"ok"})}
 type discoverRequest struct { Provider string `json:"provider"`; Name string `json:"name"`; BaseURL string `json:"base_url"`; Keywords []string `json:"keywords"` }
 func (h *Handler) discover(w http.ResponseWriter,r *http.Request){
     var in discoverRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return}
