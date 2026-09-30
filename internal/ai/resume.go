@@ -4,7 +4,6 @@ import (
     "context"
     "fmt"
     "strings"
-    "github.com/jeevanragula/career-os/internal/store"
 )
 
 func (a Analyzer) GenerateResume(ctx context.Context, jobID string) (string,error) {
