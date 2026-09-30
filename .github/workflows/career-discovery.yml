@@ -1,0 +1,25 @@
+name: CareerOS Opportunity Discovery
+
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+jobs:
+  discover:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23"
+      - name: Resolve modules
+        run: go mod tidy
+      - name: Run autonomous opportunity discovery
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
+          CAREEROS_DISCOVERY_ROLES: ${{ vars.CAREEROS_DISCOVERY_ROLES }}
+          CAREEROS_DISCOVERY_DOMAINS: ${{ vars.CAREEROS_DISCOVERY_DOMAINS }}
+          CAREEROS_DISCOVERY_LOCATIONS: ${{ vars.CAREEROS_DISCOVERY_LOCATIONS }}
+        run: go run ./cmd/career-discover
