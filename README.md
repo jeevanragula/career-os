@@ -1,63 +1,151 @@
 # CareerOS
 
-CareerOS is a spec-driven, AI-assisted career operating system for senior engineering job search.
+CareerOS is a private, evidence-first **personal career operating system** for senior engineering careers.
 
-**Core principle: evidence first, automation second.**
+It is intentionally separate from the public portfolio repository. CareerOS is the private system of record and action workspace; the portfolio is a downstream public presentation surface.
 
-## Current implementation
+## What works now
 
-- Career Brain with claims, evidence, verification, confidentiality, and validation
-- Canonical job ingestion with provenance, normalization, versioning, and deduplication
-- Compliant public Lever and Ashby job-posting adapters
-- Discovery source/query/run persistence and workflow queue foundation
-- AI job-analysis and evidence-matching contracts
-- Evidence-grounded resume variant model
-- Startup radar, application, outreach, timeline, and interview foundations
-- Exact-payload human approval boundary for external actions
-- Runnable Go HTTP service with health/readiness endpoints
+- Career Brain with claims, evidence, verification and confidentiality boundaries
+- Canonical public job ingestion with provenance, normalization, versioning and deduplication
+- Lever and Ashby discovery adapters
+- AI job analysis grounded only in application-safe career claims
+- Evidence-grounded tailored Markdown resume generation
+- Application preparation records with explicit human approval boundaries
+- Persistent Career OS workspace for goals, skills, learning, networking, startup ideas, tasks and recommendations
+- 14 specialized Career OS agents with a shared orchestration contract
+- Command-center dashboard showing opportunities, actions, skills, learning, network and startup tracks
+- Agent recommendations can be accepted/dismissed and tasks can be completed from the dashboard
+- Optional HTTP Basic Authentication for a private deployment
+- Docker Compose local runtime with PostgreSQL
+- Go test/validation workflow in GitHub Actions
 
-## SDD workflow
+## Agent system
 
-~~~text
-Problem -> Specification -> Acceptance Criteria -> Architecture
-       -> Implementation -> Tests -> Review -> Merge
-~~~
+The dashboard exposes these agents:
 
-AI may accelerate research, analysis, drafting, and workflow execution, but external actions remain human-approved.
+1. Career Intelligence
+2. Opportunity
+3. Skill Gap
+4. Learning
+5. Project
+6. Resume
+7. Interview
+8. Networking
+9. Personal Brand
+10. Startup
+11. Market Intelligence
+12. Achievement
+13. Portfolio
+14. Career Strategy
 
-## Roadmap
+Agents analyze the canonical Career Brain and workspace. They may propose recommendations and tasks, but they cannot silently change verified career facts, publish content, submit applications, or send outreach.
 
-- M0 Foundation — complete
-- M1 Career Brain — complete
-- M2 Job Discovery — runnable public-provider discovery + persistence
-- M3 Job Analysis — runnable AI analysis path
-- M4 Resume Engine — runnable AI Markdown resume generation
-- M5 Startup Radar — persistence foundation
-- M6 Application Assistant — runnable preparation workflow
-- M7 Outreach — workflow foundation; sending intentionally gated
-- M8 Interview OS — workflow foundation; practice UI next
+## Core loop
 
-See `docs/ROADMAP.md` and `docs/DEPLOYMENT.md` for the implementation and run instructions.\n\n## Runnable MVP\n\nThe current MVP can discover public Lever/Ashby postings, persist jobs in PostgreSQL, run evidence-backed AI job analysis, generate a tailored Markdown resume, and create an application preparation record. External submission and outreach remain human-approved and are not automated.
+```text
+Capture experience / opportunity / learning
+                ↓
+           Career Brain
+                ↓
+       ┌────────┼─────────┐
+       ↓        ↓         ↓
+  Opportunity Learning  Strategy
+       ↓        ↓         ↓
+    Analysis  Projects  Networking
+       └────────┼─────────┘
+                ↓
+          Action Queue
+                ↓
+       Human-approved actions
+```
+
+## Run locally
+
+Requirements: Docker Engine, Docker Compose, Git.
+
+```bash
+git clone https://github.com/jeevanragula/career-os.git
+cd career-os
+cp .env.example .env
+# edit .env and set a private password
+docker compose up --build
+```
+
+Open **http://localhost:8080**. The browser will request the configured Basic Auth credentials.
+
+Health remains available at **http://localhost:8080/healthz**.
+
+If you already have an old local PostgreSQL volume, run `make reset` once so migration 014 creates the new workspace tables. Do not use `make reset` against production data.
+
+## Configure AI
+
+CareerOS accepts an OpenAI-compatible `/chat/completions` endpoint:
+
+```env
+AI_BASE_URL=https://your-provider.example/v1
+AI_API_KEY=...
+AI_MODEL=...
+```
+
+The same interface can point to a compatible hosted provider or a local model gateway. Without AI configuration, the dashboard still loads and job discovery still works; agent buttons explain that AI configuration is required.
+
+## Job workflow
+
+1. Configure a public Lever or Ashby job source.
+2. Discover jobs with keywords.
+3. Open a posting or run **Analyze**.
+4. Generate an evidence-grounded tailored resume.
+5. Create an application preparation record.
+6. Complete the actual external submission yourself after reviewing the package.
+
+CareerOS deliberately does not auto-submit applications or send outreach.
+
+## Deploy
+
+The simplest production shape is:
+
+```text
+HTTPS / auth
+    ↓
+CareerOS container
+    ↓
+Managed PostgreSQL
+```
+
+Use any Docker-capable host (for example a VM/container platform) and supply:
+
+- `DATABASE_URL`
+- `CAREEROS_AUTH_USER`
+- `CAREEROS_AUTH_PASSWORD`
+- `AI_BASE_URL`
+- `AI_API_KEY`
+- `AI_MODEL`
+
+Keep PostgreSQL private and HTTPS enabled. Back up the database. Never put provider keys in browser code.
+
+For a first deployment, keep the dashboard and API together in the same container. Kubernetes is optional later; it is not required for the MVP.
 
 ## Repository structure
 
-~~~text
+```text
 specs/              Product and capability specifications
 docs/architecture/  System architecture
-docs/decisions/     Architecture decision records
 career-profile/     Canonical career evidence
 resumes/            Resume strategies and artifacts
-agents/             Agent specifications and implementations
-application/        Application workflow assets
-infrastructure/     Runtime and deployment assets
-internal/            Go domain, provider, workflow, and API packages
-cmd/                Executable entry points
-~~~
+agents/             Agent contracts
+database/            PostgreSQL migrations
+internal/            Go domain, AI, jobs, career workspace and API packages
+cmd/                 Executable entry points
+web/                 CareerOS command-center UI
+```
 
 ## Safety and privacy
 
-CareerOS must never fabricate career facts, metrics, employers, technologies, responsibilities, patents, achievements, or qualifications.
+CareerOS must never fabricate career facts, metrics, employers, technologies, responsibilities, patents, achievements or qualifications.
 
-Do not store credentials, session cookies, API tokens, passwords, employer/customer confidential information, proprietary source code, or unsafe non-public architecture details.
+Do not store credentials, session cookies, API tokens, passwords, employer/customer confidential information, proprietary source code or unsafe non-public architecture details.
 
 Generated career artifacts must trace back to canonical evidence.
+
+External actions remain human-approved.
