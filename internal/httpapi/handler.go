@@ -26,6 +26,7 @@ func NewHandler(s *store.Store) http.Handler {
  mux.HandleFunc("GET /api/jobs",h.listJobs)
  mux.HandleFunc("POST /api/discover",h.discover)
  mux.HandleFunc("POST /api/discover/automatic",h.automaticDiscover)
+ mux.HandleFunc("GET /api/discovery/candidates",h.discoveryCandidates)
  mux.HandleFunc("POST /api/analyze",h.analyze)
  mux.HandleFunc("POST /api/resume",h.resume)
  mux.HandleFunc("POST /api/applications",h.application)
@@ -92,3 +93,5 @@ type resumeRequest struct { JobID string `json:"job_id"` }
 func (h *Handler) resume(w http.ResponseWriter,r *http.Request){var in resumeRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};if h.Store==nil||h.AI.BaseURL==""||h.AI.Model==""{writeJSON(w,503,map[string]string{"error":"database and AI configuration are required"});return};content,err:=(&ai.Analyzer{Client:h.AI,Store:h.Store}).GenerateResume(r.Context(),in.JobID);if err!=nil{writeJSON(w,502,map[string]string{"error":err.Error()});return};id,err:=h.Store.SaveResume(r.Context(),in.JobID,"Tailored Resume","Targeted resume","job-tailored",content,h.AI.Model);if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return};writeJSON(w,200,map[string]any{"variant_id":id,"content":content})}
 type applicationRequest struct { JobID string `json:"job_id"`; ResumeVariantID string `json:"resume_variant_id"` }
 func (h *Handler) application(w http.ResponseWriter,r *http.Request){var in applicationRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};id,err:=h.Store.CreateApplication(r.Context(),in.JobID,in.ResumeVariantID);if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return};writeJSON(w,200,map[string]any{"application_id":id,"status":"preparing","message":"Application package created. Submission still requires explicit human approval."})}
+
+func(h *Handler) discoveryCandidates(w http.ResponseWriter,r *http.Request){if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};items,e:=(discovery.Store{DB:h.Store.DB}).ListCandidates(r.Context(),50);if e!=nil{writeJSON(w,500,map[string]string{"error":e.Error()});return};writeJSON(w,200,map[string]any{"candidates":items})}
