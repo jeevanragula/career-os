@@ -7,15 +7,18 @@ import (
     "os"
     "strings"
     "github.com/jeevanragula/career-os/internal/ai"
+    "github.com/jeevanragula/career-os/internal/career"
     "github.com/jeevanragula/career-os/internal/jobs"
     "github.com/jeevanragula/career-os/internal/jobs/providers"
     "github.com/jeevanragula/career-os/internal/store"
 )
 
-type Handler struct { Store *store.Store; AI ai.Client }
+type Handler struct { Store *store.Store; AI ai.Client; Career *career.HTTP }
 
 func NewHandler(s *store.Store) http.Handler {
-    h:=&Handler{Store:s,AI:ai.Client{BaseURL:os.Getenv("AI_BASE_URL"),APIKey:os.Getenv("AI_API_KEY"),Model:os.Getenv("AI_MODEL")}}
+    aiClient:=ai.Client{BaseURL:os.Getenv("AI_BASE_URL"),APIKey:os.Getenv("AI_API_KEY"),Model:os.Getenv("AI_MODEL")}
+    h:=&Handler{Store:s,AI:aiClient}
+    if s!=nil { h.Career=&career.HTTP{Store:&career.Store{DB:s.DB},AI:aiClient} }
     mux:=http.NewServeMux()
     mux.HandleFunc("GET /healthz",health)
     mux.HandleFunc("GET /readyz",func(w http.ResponseWriter,r *http.Request){if h.Store==nil{writeJSON(w,503,map[string]string{"status":"not_ready"});return};writeJSON(w,200,map[string]string{"status":"ready"})})
@@ -24,6 +27,13 @@ func NewHandler(s *store.Store) http.Handler {
     mux.HandleFunc("POST /api/analyze",h.analyze)
     mux.HandleFunc("POST /api/resume",h.resume)
     mux.HandleFunc("POST /api/applications",h.application)
+    mux.HandleFunc("GET /api/dashboard",func(w http.ResponseWriter,r *http.Request){if h.Career==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};h.Career.Dashboard(w,r)})
+    mux.HandleFunc("GET /api/agents",func(w http.ResponseWriter,r *http.Request){h.Career.Agents(w,r)})
+    mux.HandleFunc("POST /api/agents/run",func(w http.ResponseWriter,r *http.Request){if h.Career==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};h.Career.RunAgent(w,r)})
+    mux.HandleFunc("POST /api/recommendations/",func(w http.ResponseWriter,r *http.Request){if h.Career==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};h.Career.CompleteRecommendation(w,r)})
+    mux.HandleFunc("POST /api/tasks/",func(w http.ResponseWriter,r *http.Request){if h.Career==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};h.Career.CompleteTask(w,r)})
+    mux.HandleFunc("GET /dashboard.css",func(w http.ResponseWriter,r *http.Request){http.ServeFile(w,r,"web/dashboard.css")})
+    mux.HandleFunc("GET /dashboard.js",func(w http.ResponseWriter,r *http.Request){http.ServeFile(w,r,"web/dashboard.js")})
     mux.HandleFunc("GET /",h.index)
     return mux
 }
@@ -42,28 +52,10 @@ func (h *Handler) discover(w http.ResponseWriter,r *http.Request){
 func matches(o jobs.JobObservation,keywords []string) bool {if len(keywords)==0{return true};hay:=strings.ToLower(o.RawTitle+" "+o.RawDescription+" "+o.RawLocation);for _,k:=range keywords{if strings.Contains(hay,strings.ToLower(strings.TrimSpace(k))){return true}};return false}
 func (h *Handler) listJobs(w http.ResponseWriter,r *http.Request){if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};items,err:=h.Store.ListJobs(r.Context(),50);if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return};writeJSON(w,200,items)}
 type analyzeRequest struct { JobID string `json:"job_id"` }
-func (h *Handler) analyze(w http.ResponseWriter,r *http.Request){var in analyzeRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};if h.AI.BaseURL==""||h.AI.Model==""{writeJSON(w,503,map[string]string{"error":"AI_BASE_URL and AI_MODEL are required"});return};err:=(&ai.Analyzer{Client:h.AI,Store:h.Store}).Analyze(context.Background(),in.JobID);if err!=nil{writeJSON(w,502,map[string]string{"error":err.Error()});return};writeJSON(w,200,map[string]string{"status":"analyzed"})}
+func (h *Handler) analyze(w http.ResponseWriter,r *http.Request){var in analyzeRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};if h.AI.BaseURL==""||h.AI.Model==""{writeJSON(w,503,map[string]string{"error":"AI_BASE_URL and AI_MODEL are required"});return};err:=(&ai.Analyzer{Client:h.AI,Store:h.Store}).Analyze(r.Context(),in.JobID);if err!=nil{writeJSON(w,502,map[string]string{"error":err.Error()});return};writeJSON(w,200,map[string]string{"status":"analyzed"})}
 func (h *Handler) index(w http.ResponseWriter,r *http.Request){http.ServeFile(w,r,"web/index.html")}
 func writeJSON(w http.ResponseWriter,status int,v any){w.Header().Set("Content-Type","application/json");w.WriteHeader(status);_ = json.NewEncoder(w).Encode(v)}
-
 type resumeRequest struct { JobID string `json:"job_id"` }
-func (h *Handler) resume(w http.ResponseWriter,r *http.Request){
-    var in resumeRequest
-    if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return}
-    if h.Store==nil||h.AI.BaseURL==""||h.AI.Model==""{writeJSON(w,503,map[string]string{"error":"database and AI configuration are required"});return}
-    content,err:=(&ai.Analyzer{Client:h.AI,Store:h.Store}).GenerateResume(r.Context(),in.JobID)
-    if err!=nil{writeJSON(w,502,map[string]string{"error":err.Error()});return}
-    id,err:=h.Store.SaveResume(r.Context(),in.JobID,"Tailored Resume","Targeted resume","job-tailored",content,h.AI.Model)
-    if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return}
-    writeJSON(w,200,map[string]any{"variant_id":id,"content":content})
-}
-
+func (h *Handler) resume(w http.ResponseWriter,r *http.Request){var in resumeRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};if h.Store==nil||h.AI.BaseURL==""||h.AI.Model==""{writeJSON(w,503,map[string]string{"error":"database and AI configuration are required"});return};content,err:=(&ai.Analyzer{Client:h.AI,Store:h.Store}).GenerateResume(r.Context(),in.JobID);if err!=nil{writeJSON(w,502,map[string]string{"error":err.Error()});return};id,err:=h.Store.SaveResume(r.Context(),in.JobID,"Tailored Resume","Targeted resume","job-tailored",content,h.AI.Model);if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return};writeJSON(w,200,map[string]any{"variant_id":id,"content":content})}
 type applicationRequest struct { JobID string `json:"job_id"`; ResumeVariantID string `json:"resume_variant_id"` }
-func (h *Handler) application(w http.ResponseWriter,r *http.Request){
-    var in applicationRequest
-    if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return}
-    if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return}
-    id,err:=h.Store.CreateApplication(r.Context(),in.JobID,in.ResumeVariantID)
-    if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return}
-    writeJSON(w,200,map[string]any{"application_id":id,"status":"preparing","message":"Application package created. Submission still requires explicit human approval."})
-}
+func (h *Handler) application(w http.ResponseWriter,r *http.Request){var in applicationRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return};if h.Store==nil{writeJSON(w,503,map[string]string{"error":"database not configured"});return};id,err:=h.Store.CreateApplication(r.Context(),in.JobID,in.ResumeVariantID);if err!=nil{writeJSON(w,500,map[string]string{"error":err.Error()});return};writeJSON(w,200,map[string]any{"application_id":id,"status":"preparing","message":"Application package created. Submission still requires explicit human approval."})}
