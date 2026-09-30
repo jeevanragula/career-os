@@ -5,11 +5,13 @@ on:
     paths:
       - "internal/**"
       - "go.mod"
+      - "go.sum"
       - ".github/workflows/go-tests.yml"
   pull_request:
     paths:
       - "internal/**"
       - "go.mod"
+      - "go.sum"
       - ".github/workflows/go-tests.yml"
 
 jobs:
@@ -20,5 +22,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "1.23"
+      - name: Resolve modules
+        run: go mod tidy
       - name: Run tests
         run: go test ./...
