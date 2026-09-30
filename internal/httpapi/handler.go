@@ -61,16 +61,26 @@ type automaticDiscoverRequest struct {
 }
 
 func (h *Handler) automaticDiscover(w http.ResponseWriter,r *http.Request) {
- if h.Store==nil { writeJSON(w,503,map[string]string{"error":"database not configured"}); return }
- var in automaticDiscoverRequest
- _=json.NewDecoder(r.Body).Decode(&in)
- started:=time.Now().UTC()
- engine:=discovery.Engine{Search:discovery.NewBrave()}
- candidates,err:=engine.Discover(r.Context(),in.Roles,in.Domains,in.Locations,started.Year())
- if err!=nil { writeJSON(w,502,map[string]string{"error":err.Error()}); return }
- ds:=discovery.Store{DB:h.Store.DB}
- if err:=ds.SaveCandidates(r.Context(),candidates);err!=nil { writeJSON(w,500,map[string]string{"error":err.Error()}); return }
- writeJSON(w,200,map[string]any{"status":"completed","candidates":len(candidates),"started_at":started})
+	if h.Store==nil { writeJSON(w,503,map[string]string{"error":"database not configured"}); return }
+	var in automaticDiscoverRequest
+	_ = json.NewDecoder(r.Body).Decode(&in)
+	started:=time.Now().UTC()
+	engine:=discovery.Engine{Search:discovery.NewBrave()}
+	candidates,err:=engine.Discover(r.Context(),in.Roles,in.Domains,in.Locations,started.Year())
+	if err!=nil { writeJSON(w,502,map[string]string{"error":err.Error()}); return }
+	ds:=discovery.Store{DB:h.Store.DB}
+	if err:=ds.SaveCandidates(r.Context(),candidates);err!=nil { writeJSON(w,500,map[string]string{"error":err.Error()}); return }
+	resolved:=engine.ResolveCareerPages(r.Context(),candidates)
+	harvest:=engine.HarvestJobs(r.Context(),resolved,75)
+	ingested:=0
+	for _,o:=range harvest.Observations {
+		in:=jobs.NormalizeInput{Source:o.Source,SourceJobID:o.SourceJobID,URL:o.SourceURL,Title:o.RawTitle,Company:o.RawCompany,Location:o.RawLocation,Description:o.RawDescription,ObservedAt:o.ObservedAt}
+		id,e:=h.Store.UpsertJob(r.Context(),in); if e!=nil { continue }
+		_ = h.Store.InsertObservation(r.Context(),id,o)
+		_ = h.Store.UpsertVersion(r.Context(),id,in)
+		ingested++
+	}
+	writeJSON(w,200,map[string]any{"status":"completed","candidates":len(candidates),"career_pages":len(resolved),"pages_fetched":harvest.Pages,"jobs_observed":len(harvest.Observations),"jobs_ingested":ingested,"started_at":started})
 }
 
 
