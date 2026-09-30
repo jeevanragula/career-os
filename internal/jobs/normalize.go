@@ -38,6 +38,7 @@ func CanonicalizeURL(raw string) string {
 	}
 	u.RawQuery = q.Encode()
 	u.Fragment = ""
+	u.Path = strings.TrimRight(u.Path, "/")
 	u.Host = strings.ToLower(u.Host)
 	u.Scheme = strings.ToLower(u.Scheme)
 	return strings.TrimRight(u.String(), "/")
