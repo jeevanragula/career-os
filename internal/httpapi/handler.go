@@ -37,7 +37,7 @@ func NewHandler(s *store.Store) http.Handler {
     mux.HandleFunc("GET /",h.index)
     return withBasicAuth(mux,h.AuthUser,h.AuthPassword)
 }
-func withBasicAuth(next http.Handler,user,password string) http.Handler {\n    if user=="" || password=="" { return next }\n    return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){\n        u,p,ok:=r.BasicAuth(); if !ok || u!=user || p!=password { w.Header().Set("WWW-Authenticate", `Basic realm="CareerOS"`); w.WriteHeader(http.StatusUnauthorized); return }; next.ServeHTTP(w,r)\n    })\n}\n\nfunc health(w http.ResponseWriter,r *http.Request){writeJSON(w,200,map[string]string{"status":"ok"})}
+func withBasicAuth(next http.Handler,user,password string) http.Handler {\n    if user=="" || password=="" { return next }\n    return http.HandlerFunc(func(w http.ResponseWriter,r *http.Request){\n        if r.URL.Path=="/healthz" || r.URL.Path=="/readyz" { next.ServeHTTP(w,r); return }\n        u,p,ok:=r.BasicAuth(); if !ok || u!=user || p!=password { w.Header().Set("WWW-Authenticate", `Basic realm="CareerOS"`); w.WriteHeader(http.StatusUnauthorized); return }; next.ServeHTTP(w,r)\n    })\n}\n\nfunc health(w http.ResponseWriter,r *http.Request){writeJSON(w,200,map[string]string{"status":"ok"})}
 type discoverRequest struct { Provider string `json:"provider"`; Name string `json:"name"`; BaseURL string `json:"base_url"`; Keywords []string `json:"keywords"` }
 func (h *Handler) discover(w http.ResponseWriter,r *http.Request){
     var in discoverRequest;if err:=json.NewDecoder(r.Body).Decode(&in);err!=nil{writeJSON(w,400,map[string]string{"error":err.Error()});return}
