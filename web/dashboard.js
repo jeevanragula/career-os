@@ -138,17 +138,34 @@ async function runDiscovery() {
   };
   const buttons = [$("discover"), $("discoverHero"), $("discoverBottom")].filter(Boolean);
   buttons.forEach((button) => { button.disabled = true; });
-  $("discoveryStatus").textContent = "Searching Tavily, resolving career pages and matching roles…";
+  $("discoveryStatus").textContent = "Starting discovery…";
   try {
     const data = await api("/api/discover/automatic", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
     });
-    $("discoveryStatus").textContent = "Completed: " + data.candidates + " signals · " + data.career_pages +
-      " career pages · " + data.jobs_ingested + " jobs · " + data.opportunities_matched + " matches.";
-    toast("Discovery completed", true);
-    await load();
+    const runID = data.run_id;
+    $("discoveryStatus").textContent = "Discovery running…";
+    let attempts = 0;
+    while (attempts++ < 600) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      const run = await api("/api/discovery/runs/" + encodeURIComponent(runID));
+      if (run.status === "failed") throw new Error(run.error || "Discovery failed");
+      if (run.status === "completed") {
+        const result = run.query || {};
+        $("discoveryStatus").textContent =
+          "Completed: " + (run.discovered_count || 0) + " signals · " +
+          (result.career_pages || 0) + " career pages · " +
+          (result.jobs_ingested || 0) + " jobs · " +
+          (result.opportunities_matched || 0) + " matches.";
+        toast("Discovery completed", true);
+        await load();
+        return;
+      }
+      $("discoveryStatus").textContent = "Discovery running… " + (run.discovered_count || 0) + " companies/signals found.";
+    }
+    throw new Error("Discovery is still running. Refresh later to see the result.");
   } catch (error) {
     $("discoveryStatus").textContent = "Discovery failed: " + error.message;
     toast(error.message);
