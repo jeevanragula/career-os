@@ -93,7 +93,7 @@ func (h *Handler) discoveryRun(w http.ResponseWriter,r *http.Request) {
 }
 
 func (h *Handler) runAutomaticDiscovery(runID string,in automaticDiscoverRequest) {
- ctx,cancel:=context.WithTimeout(context.Background(),20*time.Minute)
+ ctx,cancel:=context.WithTimeout(context.Background(),2*time.Minute)
  defer cancel()
  ds:=discovery.Store{DB:h.Store.DB}
  fail:=func(err error){ _=ds.UpdateRun(context.Background(),runID,"failed",0,err.Error()) }
@@ -103,22 +103,15 @@ func (h *Handler) runAutomaticDiscovery(runID string,in automaticDiscoverRequest
  candidates,err:=engine.Discover(ctx,in.Roles,in.Domains,in.Locations,started.Year())
  if err!=nil { fail(err); return }
  if err=ds.SaveCandidates(ctx,candidates);err!=nil { fail(err); return }
- _=ds.UpdateRun(ctx,runID,"running",len(candidates),"")
- resolved:=engine.ResolveCareerPages(ctx,candidates)
- harvest:=engine.HarvestJobs(ctx,resolved,75)
- ingested:=0
- for _,o:=range harvest.Observations {
-  in:=jobs.NormalizeInput{Source:o.Source,SourceJobID:o.SourceJobID,URL:o.SourceURL,Title:o.RawTitle,Company:o.RawCompany,Location:o.RawLocation,Description:o.RawDescription,ObservedAt:o.ObservedAt}
-  id,e:=h.Store.UpsertJob(ctx,in); if e!=nil { continue }
-  _=h.Store.InsertObservation(ctx,id,o)
-  _=h.Store.UpsertVersion(ctx,id,in)
-  _=h.Store.SaveJobEvidence(ctx,id,o.SourceURL,"autonomous-web",map[string]any{"source":o.Source,"observed_at":o.ObservedAt})
-  ingested++
- }
- matched:=0
- if ms,e:=opportunity.Compute(ctx,h.Store.DB,200);e==nil { for _,m:=range ms { if opportunity.Save(ctx,h.Store.DB,m)==nil { matched++ } } }
- result,_:=json.Marshal(map[string]any{"career_pages":len(resolved),"pages_fetched":harvest.Pages,"jobs_observed":len(harvest.Observations),"jobs_ingested":ingested,"opportunities_matched":matched})
- _,_=h.Store.DB.ExecContext(context.Background(),"UPDATE discovery_runs SET status='completed',discovered_count=$2,error='',finished_at=now(),query=query || $3::jsonb WHERE id=$1",runID,len(candidates),string(result))
+
+ // First-pass discovery intentionally stops here. Do not crawl or harvest yet.
+ result,_:=json.Marshal(map[string]any{
+  "search_results":len(candidates),
+  "next_step":"review search results before crawling",
+ })
+ _,_=h.Store.DB.ExecContext(context.Background(),
+  "UPDATE discovery_runs SET status='completed',discovered_count=$2,error='',finished_at=now(),query=query || $3::jsonb WHERE id=$1",
+  runID,len(candidates),string(result))
 }
 
 type discoverRequest struct { Provider string `json:"provider"`; Name string `json:"name"`; BaseURL string `json:"base_url"`; Keywords []string `json:"keywords"` }
