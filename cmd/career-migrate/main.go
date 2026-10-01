@@ -50,10 +50,10 @@ func main() {
     }
     sort.Strings(files)
 
-    // CareerOS originally used Postgres' /docker-entrypoint-initdb.d mechanism,
-    // which does not maintain migration history. If we find an existing legacy
-    // schema with no history, baseline the original 001-016 migrations and let
-    // the runner apply 017+ (all of which are idempotent).
+    // The original Docker setup applied migrations 001+ without recording
+    // migration history. For an existing legacy DB, baseline only the core
+    // schema migrations through 014. Discovery/harvest migrations 015+ must
+    // actually execute because those tables may be absent.
     var migrationCount int
     if err := s.DB.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).Scan(&migrationCount); err != nil {
         log.Fatal(err)
@@ -65,13 +65,13 @@ func main() {
         }
         if legacySkillsExists {
             for _, name := range files {
-                if name >= "001_" && name < "017_" {
+                if name >= "001_" && name < "015_" {
                     if _, err := s.DB.ExecContext(ctx, `INSERT INTO schema_migrations(version) VALUES($1) ON CONFLICT DO NOTHING`, name); err != nil {
                         log.Fatalf("baseline migration %s: %v", name, err)
                     }
                 }
             }
-            fmt.Println("baselined legacy migrations 001-016")
+            fmt.Println("baselined legacy migrations 001-014")
         }
     }
 
