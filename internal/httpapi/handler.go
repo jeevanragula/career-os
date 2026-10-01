@@ -11,6 +11,7 @@ import (
  "github.com/jeevanragula/career-os/internal/discovery"
  "github.com/jeevanragula/career-os/internal/jobs"
  "github.com/jeevanragula/career-os/internal/jobs/providers"
+ "github.com/jeevanragula/career-os/internal/opportunity"
  "github.com/jeevanragula/career-os/internal/store"
 )
 
@@ -78,9 +79,12 @@ func (h *Handler) automaticDiscover(w http.ResponseWriter,r *http.Request) {
 		id,e:=h.Store.UpsertJob(r.Context(),in); if e!=nil { continue }
 		_ = h.Store.InsertObservation(r.Context(),id,o)
 		_ = h.Store.UpsertVersion(r.Context(),id,in)
+        _ = h.Store.SaveJobEvidence(r.Context(),id,o.SourceURL,"autonomous-web",map[string]any{"source":o.Source,"observed_at":o.ObservedAt})
 		ingested++
 	}
-	writeJSON(w,200,map[string]any{"status":"completed","candidates":len(candidates),"career_pages":len(resolved),"pages_fetched":harvest.Pages,"jobs_observed":len(harvest.Observations),"jobs_ingested":ingested,"started_at":started})
+	matched:=0
+    if ms,e:=opportunity.Compute(r.Context(),h.Store.DB,200);e==nil { for _,m:=range ms { if opportunity.Save(r.Context(),h.Store.DB,m)==nil { matched++ } } }
+    writeJSON(w,200,map[string]any{"status":"completed","candidates":len(candidates),"career_pages":len(resolved),"pages_fetched":harvest.Pages,"jobs_observed":len(harvest.Observations),"jobs_ingested":ingested,"opportunities_matched":matched,"started_at":started})
 }
 
 
