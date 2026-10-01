@@ -169,9 +169,9 @@ The discovery flow is:
 
 A discovery signal is **not** an employer rating. It is only a reason to investigate a company or role.
 
-The current web-search implementation uses Brave Search API. Configure only:
+The current web-search implementation uses Tavily Search API. Configure only:
 
-BRAVE_SEARCH_API_KEY=...
+TAVILY_API_KEY=...
 
 You do not need to configure individual job portals or companies.
 
@@ -181,7 +181,7 @@ You do not need to configure individual job portals or companies.
 GitHub Actions runs the opportunity harvester daily. Add these **repository Actions secrets**:
 
 - `DATABASE_URL` — PostgreSQL connection string for the CareerOS database.
-- `BRAVE_SEARCH_API_KEY` — Brave Search API key.
+- `TAVILY_API_KEY` — Tavily Search API key.
 
 Optional repository Actions variables:
 
