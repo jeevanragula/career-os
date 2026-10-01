@@ -33,6 +33,6 @@ func main(){
  }
  matches,err:=opportunity.Compute(ctx,s.DB,200);if err!=nil{log.Printf("matching: %v",err)} else {for _,m:=range matches{if err:=opportunity.Save(ctx,s.DB,m);err!=nil{log.Printf("save match %s: %v",m.JobID,err)}}}
  status:="completed";_ = discovery.FinishHarvestRun(ctx,s.DB,run.ID,int64(result.Pages),int64(len(result.Observations)),int64(ingested),status,"")
- log.Printf("CareerOS harvest: candidates=%d resolved=%d pages=%d jobs=%d ingested=%d matched=%d expired=%d",len(candidates),len(resolved),result.Pages,len(result.Observations),ingested,len(matches),stale)
+ log.Printf("CareerOS harvest: candidates=%d resolved=%d pages=%d jobs=%d ingested=%d matched=%d expired=deferred",len(candidates),len(resolved),result.Pages,len(result.Observations),ingested,len(matches))
 }
 func split(v string)[]string{var out []string;for _,x:=range strings.Split(v,","){if x=strings.TrimSpace(x);x!=""{out=append(out,x)}};return out}
