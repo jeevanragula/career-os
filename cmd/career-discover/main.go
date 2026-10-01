@@ -20,7 +20,7 @@ func main(){
  engine:=discovery.Engine{Search:discovery.NewBrave()}
  started:=time.Now().UTC()
  candidates,err:=engine.Discover(ctx,split(os.Getenv("CAREEROS_DISCOVERY_ROLES")),split(os.Getenv("CAREEROS_DISCOVERY_DOMAINS")),split(os.Getenv("CAREEROS_DISCOVERY_LOCATIONS")),started.Year());if err!=nil{log.Fatal(err)}
- run,err:=discovery.StartHarvestRun(ctx,s.DB,started.Format("20060102"));if err!=nil{log.Fatal(err)}
+ run,err:=discovery.StartHarvestRun(ctx,s.DB,started.Format("20060102"),len(candidates));if err!=nil{log.Fatal(err)}
  resolved:=engine.ResolveCareerPages(ctx,candidates);result:=engine.HarvestJobs(ctx,resolved,75)
  ingested:=0
  for _,o:=range result.Observations{
