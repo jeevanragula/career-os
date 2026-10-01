@@ -92,12 +92,13 @@ The same interface can point to a compatible hosted provider or a local model ga
 
 ## Job workflow
 
-1. Configure a public Lever or Ashby job source.
-2. Discover jobs with keywords.
-3. Open a posting or run **Analyze**.
-4. Generate an evidence-grounded tailored resume.
-5. Create an application preparation record.
-6. Complete the actual external submission yourself after reviewing the package.
+1. Set your career targets in the dashboard.
+2. Run **Discover opportunities**; CareerOS chooses public signal sources itself.
+3. CareerOS resolves public career pages, harvests postings, preserves source evidence, versions changes, and computes a transparent skill-match score.
+4. Review the Opportunity Inbox and run **Analyze** on roles worth deeper evaluation.
+5. Generate an evidence-grounded tailored resume.
+6. Create an application preparation record.
+7. Complete the actual external submission yourself after reviewing the package.
 
 CareerOS deliberately does not auto-submit applications or send outreach.
 
@@ -173,3 +174,23 @@ The current web-search implementation uses Brave Search API. Configure only:
 BRAVE_SEARCH_API_KEY=...
 
 You do not need to configure individual job portals or companies.
+
+
+## Scheduled autonomous discovery
+
+GitHub Actions runs the opportunity harvester daily. Add these **repository Actions secrets**:
+
+- `DATABASE_URL` — PostgreSQL connection string for the CareerOS database.
+- `BRAVE_SEARCH_API_KEY` — Brave Search API key.
+
+Optional repository Actions variables:
+
+- `CAREEROS_DISCOVERY_ROLES`
+- `CAREEROS_DISCOVERY_DOMAINS`
+- `CAREEROS_DISCOVERY_LOCATIONS`
+
+The workflow is intentionally fail-closed when either required secret is missing. GitHub stores Actions secrets encrypted and exposes them to workflows only when referenced by the workflow. urlGitHub Actions secrets documentationhttps://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+
+For an existing PostgreSQL/Supabase database, apply all migrations through `017_opportunity_matching.sql` before enabling the scheduled harvester. The repository also contains `cmd/career-migrate` for idempotent migration execution on databases that have not previously been migrated.
+
+The harvester records harvest-run status, job source evidence, job versions, opportunity matches, and freshness. It does **not** submit applications, send outreach, or publish content.
