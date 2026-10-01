@@ -17,7 +17,7 @@ func main(){
  if os.Getenv("TAVILY_API_KEY")==""{log.Fatal("TAVILY_API_KEY is required")}
  ctx,cancel:=context.WithTimeout(context.Background(),20*time.Minute);defer cancel()
  s,err:=store.Open(ctx,dsn);if err!=nil{log.Fatal(err)};defer s.Close()
- engine:=discovery.Engine{Search:discovery.NewBrave()}
+ engine:=discovery.Engine{Search:discovery.NewTavily()}
  started:=time.Now().UTC()
  candidates,err:=engine.Discover(ctx,split(os.Getenv("CAREEROS_DISCOVERY_ROLES")),split(os.Getenv("CAREEROS_DISCOVERY_DOMAINS")),split(os.Getenv("CAREEROS_DISCOVERY_LOCATIONS")),started.Year());if err!=nil{log.Fatal(err)}
  run,err:=discovery.StartHarvestRun(ctx,s.DB,started.Format("20060102"),len(candidates));if err!=nil{log.Fatal(err)}
