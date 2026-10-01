@@ -12,7 +12,6 @@ import (
  "github.com/jeevanragula/career-os/internal/discovery"
  "github.com/jeevanragula/career-os/internal/jobs"
  "github.com/jeevanragula/career-os/internal/jobs/providers"
- "github.com/jeevanragula/career-os/internal/opportunity"
  "github.com/jeevanragula/career-os/internal/store"
 )
 
