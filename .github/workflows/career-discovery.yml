@@ -18,7 +18,7 @@ jobs:
       - name: Run autonomous opportunity discovery
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          BRAVE_SEARCH_API_KEY: ${{ secrets.BRAVE_SEARCH_API_KEY }}
+          TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
           CAREEROS_DISCOVERY_ROLES: ${{ vars.CAREEROS_DISCOVERY_ROLES }}
           CAREEROS_DISCOVERY_DOMAINS: ${{ vars.CAREEROS_DISCOVERY_DOMAINS }}
           CAREEROS_DISCOVERY_LOCATIONS: ${{ vars.CAREEROS_DISCOVERY_LOCATIONS }}
