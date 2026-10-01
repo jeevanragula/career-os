@@ -14,7 +14,7 @@ import (
 
 func main(){
  dsn:=os.Getenv("DATABASE_URL");if dsn==""{log.Fatal("DATABASE_URL is required")}
- if os.Getenv("BRAVE_SEARCH_API_KEY")==""{log.Fatal("BRAVE_SEARCH_API_KEY is required")}
+ if os.Getenv("TAVILY_API_KEY")==""{log.Fatal("TAVILY_API_KEY is required")}
  ctx,cancel:=context.WithTimeout(context.Background(),20*time.Minute);defer cancel()
  s,err:=store.Open(ctx,dsn);if err!=nil{log.Fatal(err)};defer s.Close()
  engine:=discovery.Engine{Search:discovery.NewBrave()}
