@@ -189,7 +189,7 @@ Optional repository Actions variables:
 - `CAREEROS_DISCOVERY_DOMAINS`
 - `CAREEROS_DISCOVERY_LOCATIONS`
 
-The workflow is intentionally fail-closed when either required secret is missing. GitHub stores Actions secrets encrypted and exposes them to workflows only when referenced by the workflow. urlGitHub Actions secrets documentationhttps://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-secrets
+The workflow is intentionally fail-closed when either required secret is missing. GitHub stores Actions secrets encrypted and exposes them to workflows only when referenced by the workflow.
 
 For an existing PostgreSQL/Supabase database, apply all migrations through `017_opportunity_matching.sql` before enabling the scheduled harvester. The repository also contains `cmd/career-migrate` for idempotent migration execution on databases that have not previously been migrated.
 
