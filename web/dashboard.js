@@ -155,11 +155,9 @@ async function runDiscovery() {
       if (run.status === "completed") {
         const result = run.query || {};
         $("discoveryStatus").textContent =
-          "Completed: " + (run.discovered_count || 0) + " signals · " +
-          (result.career_pages || 0) + " career pages · " +
-          (result.jobs_ingested || 0) + " jobs · " +
-          (result.opportunities_matched || 0) + " matches.";
-        toast("Discovery completed", true);
+          "Search completed: " + (run.discovered_count || 0) +
+          " Tavily results. Review them below before crawling.";
+        toast("Tavily search completed", true);
         await load();
         return;
       }
