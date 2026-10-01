@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+ "context"
  "encoding/json"
  "net/http"
  "os"
@@ -31,6 +32,7 @@ func NewHandler(stores ...*store.Store) http.Handler {
  mux.HandleFunc("POST /api/discover",h.discover)
  mux.HandleFunc("POST /api/discover/automatic",h.automaticDiscover)
  mux.HandleFunc("GET /api/discovery/candidates",h.discoveryCandidates)
+ mux.HandleFunc("GET /api/discovery/runs/{id}",h.discoveryRun)
  mux.HandleFunc("POST /api/analyze",h.analyze)
  mux.HandleFunc("POST /api/resume",h.resume)
  mux.HandleFunc("POST /api/applications",h.application)
@@ -73,31 +75,51 @@ type automaticDiscoverRequest struct {
 }
 
 func (h *Handler) automaticDiscover(w http.ResponseWriter,r *http.Request) {
-	if h.Store==nil { writeJSON(w,503,map[string]string{"error":"database not configured"}); return }
-	var in automaticDiscoverRequest
-	_ = json.NewDecoder(r.Body).Decode(&in)
-	started:=time.Now().UTC()
-	engine:=discovery.Engine{Search:discovery.NewTavily()}
-	candidates,err:=engine.Discover(r.Context(),in.Roles,in.Domains,in.Locations,started.Year())
-	if err!=nil { writeJSON(w,502,map[string]string{"error":err.Error()}); return }
-	ds:=discovery.Store{DB:h.Store.DB}
-	if err:=ds.SaveCandidates(r.Context(),candidates);err!=nil { writeJSON(w,500,map[string]string{"error":err.Error()}); return }
-	resolved:=engine.ResolveCareerPages(r.Context(),candidates)
-	harvest:=engine.HarvestJobs(r.Context(),resolved,75)
-	ingested:=0
-	for _,o:=range harvest.Observations {
-		in:=jobs.NormalizeInput{Source:o.Source,SourceJobID:o.SourceJobID,URL:o.SourceURL,Title:o.RawTitle,Company:o.RawCompany,Location:o.RawLocation,Description:o.RawDescription,ObservedAt:o.ObservedAt}
-		id,e:=h.Store.UpsertJob(r.Context(),in); if e!=nil { continue }
-		_ = h.Store.InsertObservation(r.Context(),id,o)
-		_ = h.Store.UpsertVersion(r.Context(),id,in)
-        _ = h.Store.SaveJobEvidence(r.Context(),id,o.SourceURL,"autonomous-web",map[string]any{"source":o.Source,"observed_at":o.ObservedAt})
-		ingested++
-	}
-	matched:=0
-    if ms,e:=opportunity.Compute(r.Context(),h.Store.DB,200);e==nil { for _,m:=range ms { if opportunity.Save(r.Context(),h.Store.DB,m)==nil { matched++ } } }
-    writeJSON(w,200,map[string]any{"status":"completed","candidates":len(candidates),"career_pages":len(resolved),"pages_fetched":harvest.Pages,"jobs_observed":len(harvest.Observations),"jobs_ingested":ingested,"opportunities_matched":matched,"started_at":started})
+ if h.Store==nil { writeJSON(w,503,map[string]string{"error":"database not configured"}); return }
+ var in automaticDiscoverRequest
+ _ = json.NewDecoder(r.Body).Decode(&in)
+ ds:=discovery.Store{DB:h.Store.DB}
+ runID,err:=ds.CreateRun(r.Context(),map[string]any{"roles":in.Roles,"domains":in.Domains,"locations":in.Locations})
+ if err!=nil { writeJSON(w,500,map[string]string{"error":err.Error()}); return }
+ go h.runAutomaticDiscovery(runID,in)
+ writeJSON(w,202,map[string]any{"status":"started","run_id":runID})
 }
 
+func (h *Handler) discoveryRun(w http.ResponseWriter,r *http.Request) {
+ if h.Store==nil { writeJSON(w,503,map[string]string{"error":"database not configured"}); return }
+ run,err:=(discovery.Store{DB:h.Store.DB}).GetRun(r.Context(),r.PathValue("id"))
+ if err!=nil { writeJSON(w,404,map[string]string{"error":"discovery run not found"}); return }
+ writeJSON(w,200,run)
+}
+
+func (h *Handler) runAutomaticDiscovery(runID string,in automaticDiscoverRequest) {
+ ctx,cancel:=context.WithTimeout(context.Background(),20*time.Minute)
+ defer cancel()
+ ds:=discovery.Store{DB:h.Store.DB}
+ fail:=func(err error){ _=ds.UpdateRun(context.Background(),runID,"failed",0,err.Error()) }
+
+ started:=time.Now().UTC()
+ engine:=discovery.Engine{Search:discovery.NewTavily()}
+ candidates,err:=engine.Discover(ctx,in.Roles,in.Domains,in.Locations,started.Year())
+ if err!=nil { fail(err); return }
+ if err=ds.SaveCandidates(ctx,candidates);err!=nil { fail(err); return }
+ _=ds.UpdateRun(ctx,runID,"running",len(candidates),"")
+ resolved:=engine.ResolveCareerPages(ctx,candidates)
+ harvest:=engine.HarvestJobs(ctx,resolved,75)
+ ingested:=0
+ for _,o:=range harvest.Observations {
+  in:=jobs.NormalizeInput{Source:o.Source,SourceJobID:o.SourceJobID,URL:o.SourceURL,Title:o.RawTitle,Company:o.RawCompany,Location:o.RawLocation,Description:o.RawDescription,ObservedAt:o.ObservedAt}
+  id,e:=h.Store.UpsertJob(ctx,in); if e!=nil { continue }
+  _=h.Store.InsertObservation(ctx,id,o)
+  _=h.Store.UpsertVersion(ctx,id,in)
+  _=h.Store.SaveJobEvidence(ctx,id,o.SourceURL,"autonomous-web",map[string]any{"source":o.Source,"observed_at":o.ObservedAt})
+  ingested++
+ }
+ matched:=0
+ if ms,e:=opportunity.Compute(ctx,h.Store.DB,200);e==nil { for _,m:=range ms { if opportunity.Save(ctx,h.Store.DB,m)==nil { matched++ } } }
+ result,_:=json.Marshal(map[string]any{"career_pages":len(resolved),"pages_fetched":harvest.Pages,"jobs_observed":len(harvest.Observations),"jobs_ingested":ingested,"opportunities_matched":matched})
+ _,_=h.Store.DB.ExecContext(context.Background(),"UPDATE discovery_runs SET status='completed',discovered_count=$2,error='',finished_at=now(),query=query || $3::jsonb WHERE id=$1",runID,len(candidates),string(result))
+}
 
 type discoverRequest struct { Provider string `json:"provider"`; Name string `json:"name"`; BaseURL string `json:"base_url"`; Keywords []string `json:"keywords"` }
 func (h *Handler) discover(w http.ResponseWriter,r *http.Request){
