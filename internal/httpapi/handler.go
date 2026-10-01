@@ -66,7 +66,7 @@ func (h *Handler) automaticDiscover(w http.ResponseWriter,r *http.Request) {
 	var in automaticDiscoverRequest
 	_ = json.NewDecoder(r.Body).Decode(&in)
 	started:=time.Now().UTC()
-	engine:=discovery.Engine{Search:discovery.NewBrave()}
+	engine:=discovery.Engine{Search:discovery.NewTavily()}
 	candidates,err:=engine.Discover(r.Context(),in.Roles,in.Domains,in.Locations,started.Year())
 	if err!=nil { writeJSON(w,502,map[string]string{"error":err.Error()}); return }
 	ds:=discovery.Store{DB:h.Store.DB}
