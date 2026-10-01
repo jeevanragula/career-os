@@ -48,4 +48,3 @@ func(s Store)SaveCandidates(ctx context.Context,candidates []Candidate)error{
 }
 
 func(s Store)ListCandidates(ctx context.Context,limit int)([]Candidate,error){if limit<=0{limit=50};rows,e:=s.DB.QueryContext(ctx,"SELECT name,homepage_url,canonical_domain FROM discovered_companies WHERE status<>'rejected' ORDER BY last_seen_at DESC LIMIT $1",limit);if e!=nil{return nil,e};defer rows.Close();var out []Candidate;for rows.Next(){var x Candidate;var domain string;if e:=rows.Scan(&x.Name,&x.URL,&domain);e!=nil{return nil,e};x.Evidence=domain;out=append(out,x)};return out,rows.Err()}
-}
