@@ -26,6 +26,7 @@ func NewHandler(stores ...*store.Store) http.Handler {
  mux:=http.NewServeMux()
  mux.HandleFunc("GET /healthz",health)
  mux.HandleFunc("GET /readyz",func(w http.ResponseWriter,r *http.Request){if h.Store==nil{writeJSON(w,503,map[string]string{"status":"not_ready"});return};writeJSON(w,200,map[string]string{"status":"ready"})})
+ mux.HandleFunc("GET /api/status",h.status)
  mux.HandleFunc("GET /api/jobs",h.listJobs)
  mux.HandleFunc("POST /api/discover",h.discover)
  mux.HandleFunc("POST /api/discover/automatic",h.automaticDiscover)
@@ -54,6 +55,16 @@ func withBasicAuth(next http.Handler,user,password string) http.Handler {
 }
 
 func health(w http.ResponseWriter,r *http.Request){writeJSON(w,200,map[string]string{"status":"ok"})}
+func (h *Handler) status(w http.ResponseWriter,r *http.Request) {
+ aiConfigured := h.AI.BaseURL != "" && h.AI.Model != ""
+ tavilyConfigured := os.Getenv("TAVILY_API_KEY") != ""
+ writeJSON(w,200,map[string]any{
+  "database": h.Store != nil,
+  "tavily": tavilyConfigured,
+  "ai": aiConfigured,
+  "ai_provider": h.AI.BaseURL,
+ })
+}
 
 type automaticDiscoverRequest struct {
  Roles []string
